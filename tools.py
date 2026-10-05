@@ -20,9 +20,41 @@ That last line is what your loop branches on. "Returns a list" earns nothing —
 the description has to say what is *in* the list.
 """
 
-import config  # noqa: F401 — you'll use this in search_listings
+import re
+
+import config
 from generate import generate
 from utils.data_loader import load_listings
+
+_TOKEN_RE = re.compile(r"\d+\.\d+|[a-z0-9]+")
+
+
+def _tokenize(text: str) -> set[str]:
+    """Lowercase and split into whole tokens, decimals kept intact.
+    "S/M" -> {"s", "m"}; "US 8.5" -> {"us", "8.5"}.
+    """
+    return set(_TOKEN_RE.findall(text.lower()))
+
+
+def _listing_tokens(listing: dict) -> set[str]:
+    """Build the bag-of-words token set for one listing's searchable text."""
+    fields = [
+        listing.get("title", ""),
+        listing.get("description", ""),
+        listing.get("category", ""),
+        " ".join(listing.get("style_tags", [])),
+    ]
+    return _tokenize(" ".join(fields))
+
+
+def _score(query_tokens: set[str], listing: dict) -> int:
+    """Count how many query tokens appear in the listing's text."""
+    return len(query_tokens & _listing_tokens(listing))
+
+
+def _size_matches(query_tokens: set[str], listing_size: str) -> bool:
+    """True if every token in query_tokens appears in listing_size's tokens."""
+    return query_tokens.issubset(_tokenize(listing_size))
 
 
 # ── Tool 1: search_listings ───────────────────────────────────────────────────
@@ -78,8 +110,27 @@ def search_listings(
     Test it from a terminal before you move on:
         python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
     """
-    # TODO: replace this with your implementation
-    return []
+    listings = load_listings()
+    size_tokens = _tokenize(size) if size is not None else None
+
+    filtered = []
+    for listing in listings:
+        if max_price is not None and listing["price"] > max_price:
+            continue
+        if size_tokens is not None and not _size_matches(size_tokens, listing["size"]):
+            continue
+        filtered.append(listing)
+
+    query_tokens = _tokenize(description)
+
+    scored = []
+    for listing in filtered:
+        score = _score(query_tokens, listing)
+        if score > 0:
+            scored.append((score, listing))
+
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    return [listing for _, listing in scored[: config.SEARCH_RESULT_LIMIT]]
 
 
 # ── Tool 2: suggest_outfit ────────────────────────────────────────────────────
