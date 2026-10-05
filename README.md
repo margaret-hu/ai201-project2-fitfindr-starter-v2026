@@ -59,24 +59,24 @@
 
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Searches the local clothing catalogue by description keywords, with optional size and maximum-price filters. A listing counts as a match when at least one word from the search query appears, case-insensitively, in its `title`, `description`, or `style_tags`; the price limit is inclusive.
+- **Inputs:** `description` (str), `size` (str or None — matched by whole token, case-insensitively, e.g. "m" matches "S/M" but not "us 9"), `max_price` (float or None).
+- **Returns:** A list of matching listing dictionaries, capped at `config.SEARCH_RESULT_LIMIT` (10), ranked by score (the count of distinct query words matched) highest first, then by lower price; each includes fields such as `title`, `price`, `size`, and `platform`.
+- **When it has nothing:** Returns an empty list [], not None or an exception.
 
 ### `suggest_outfit`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Suggests two outfits built around a selected listing, using items from the user’s wardrobe when available.
+- **Inputs:** `new_item` (dict) a listing, `wardrobe` (dict) with an items list.
+- **Returns:** A non-empty str with two outfit suggestions; when the wardrobe has items, each suggestion names specific pieces from `wardrobe['items']` verbatim (using each item's `name` field as stored, not a paraphrase).
+- **When it has nothing:** Still returns general outfit ideas and says they are general because no wardrobe is saved.
 
 ### `create_fit_card`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Writes a short social-media-style caption about the selected second-hand find and how it could be worn.
+- **Inputs:** `outfit` (str), `new_item` (dict) a listing.
+- **Returns:** A str of two to four sentences that includes the price written with digits and the selling platform.
+- **When it has nothing:** If `outfit` is empty or whitespace, returns a helpful fallback message instead of calling the model or raising an exception.
 
 ---
 
