@@ -163,8 +163,36 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
     Test it from a terminal before you move on:
         python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
     """
-    # TODO: replace this with your implementation
-    return ""
+    new_item_description = (
+        f"{new_item.get('title', 'this item')} "
+        f"({new_item.get('category', '')}, {', '.join(new_item.get('colors', []))})"
+    )
+
+    items = wardrobe.get("items", [])
+
+    if not items:
+        prompt = (
+            f"Suggest general styling ideas for this thrifted item:\n"
+            f"{new_item_description}\n"
+            "Provide one or two outfit suggestions. Be specific about why each "
+            "works and how to style it. 2-3 sentences."
+        )
+    else:
+        wardrobe_summary = "\n".join(
+            f"- {item['name']} ({item['category']}, {', '.join(item['colors'])})"
+            for item in items
+        )
+        prompt = (
+            f"Given the following thrifted item:\n"
+            f"{new_item_description}\n"
+            f"And the user's wardrobe:\n"
+            f"{wardrobe_summary}\n\n"
+            "Provide one or two outfit combinations that include the thrifted "
+            "item and specific pieces from the wardrobe, naming each piece. "
+            "Be specific about why it works and how to style it. 2-3 sentences."
+        )
+
+    return generate(prompt)
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
