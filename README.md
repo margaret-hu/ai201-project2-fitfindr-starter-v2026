@@ -41,6 +41,8 @@
 
 <!-- Three or four sentences: what a user asks for, and what they get back. -->
 
+FitFindr is a second-hand shopping assistant. A user describes what they want, such as "vintage graphic tee under $30, size M", and the agent finds the best-matching resale listing. It then suggests one or two outfits around that item, using the user's saved wardrobe if they have one, and writes a short social-media caption with the price and platform. If nothing matches, it stops and says what to change in the search.
+
 
 
 ---
@@ -66,9 +68,9 @@
 
 ### `suggest_outfit`
 
-- **What it does:** Suggests two outfits built around a selected listing, using items from the user’s wardrobe when available.
+- **What it does:** Suggests one or two outfits built around a selected listing, using items from the user’s wardrobe when available.
 - **Inputs:** `new_item` (dict) a listing, `wardrobe` (dict) with an items list.
-- **Returns:** A non-empty str with two outfit suggestions; when the wardrobe has items, each suggestion names specific pieces from `wardrobe['items']` verbatim (using each item's `name` field as stored, not a paraphrase).
+- **Returns:** A non-empty str with one or two outfit suggestions; when the wardrobe has items, each suggestion names specific pieces from `wardrobe['items']` verbatim (using each item's `name` field as stored, not a paraphrase).
 - **When it has nothing:** Still returns general outfit ideas and says they are general because no wardrobe is saved.
 
 ### `create_fit_card`
@@ -93,13 +95,13 @@
      The grader checks your code against what you claim here, so the file and
      function have to be real. -->
 
-**Branch rule:**
+**Branch rule:** If `search_listings` returns an empty list, set `session["error"]` to a message telling the user what to change and return the session without calling `suggest_outfit`. Otherwise take the first result and continue to `suggest_outfit`, then `create_fit_card`.
 
 **Where it lives:** `agent.py::run_agent`
 
-**How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+**How the query is parsed:** Regex, in `agent.py::_parse_query`. It pulls the price ("under $30") and size ("size M") out of the query, and what's left becomes the description.
 
-**What moves through the session:** <!-- which fields, in what order -->
+**What moves through the session:** `query` → `parsed` (description, size, max_price) → `search_results` → `selected_item` → `outfit_suggestion` → `fit_card`. `wardrobe` is set at the start, and `error` is set only when the search is empty.
 
 ---
 
@@ -113,25 +115,42 @@
 **One full query**
 
 ```
-$ python app.py ask '...'
+$ python app.py ask 'vintage graphic tee under $30'
 
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit:   **Outfit Combination:**
+            Pair the Y2K butterfly baby tee with the baggy straight-leg dark wash jeans, chunky white sneakers, and the black crossbody bag.
+
+            **Why it works & how to style it:**
+            This look plays on the quintessential Y2K proportion-play by contrasting the fitted, cropped silhouette of the baby tee with the relaxed, low-slung feel of the baggy jeans. To complete the outfit, throw the black cropped zip hoodie on top for easy layering and let the butterfly print pop against the dark indigo denim.
+
+  Fit card: Found the absolute cutest Y2K butterfly baby tee on depop for just $18 and I am never taking it off. I've been styling it with my baggiest dark wash jeans and chunky sneakers for that ultimate 2000s proportion play. Throwing a black zip hoodie over top makes it the easiest everyday fit.
+
+0 model calls this session, 2 served from cache
 ```
 
 **The three tools, tested one at a time**
 
-```
-$ python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
+The full search result is long, so this one prints only titles and prices.
 
 ```
-
-```
-$ python -c "from tools import suggest_outfit; ..."
-
+$ python -c "from tools import search_listings; print([(r['title'], r['price']) for r in search_listings('graphic tee', max_price=30)])"
+[('Y2K Baby Tee — Butterfly Print', 18.0), ('Graphic Tee — 2003 Tour Bootleg Style', 24.0), ('Mesh Long-Sleeve Top — Black', 15.0), ('Vintage Band Tee — Faded Grey', 19.0), ('Low-Rise Cargo Pants — Khaki', 27.0), ('Vintage Graphic Hoodie — Faded Black', 26.0)]
 ```
 
 ```
-$ python -c "from tools import create_fit_card; ..."
+$ python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
+**Outfit Combination:**
+Pair the vintage Levi's 501 jeans with the white ribbed tank top, layered under the vintage black denim jacket, and finish with the black combat boots and black crossbody bag. 
 
+**Why it works and how to styling it:**
+This look leans into a classic, grunge-inspired Americana aesthetic by pairing medium-wash denim with monochrome black layers. Tucking in the white tank defines the waist against the straight-leg cut of the jeans, while rolling the jacket sleeves and wearing chunky boots adds an effortlessly cool, textured edge.
+```
+
+```
+$ python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
+Found my holy grail vintage Levi's 501s and I'm obsessed with this medium wash. They were only $38, which feels like an absolute steal for how perfectly worn-in they are. Just posted them on depop because they're a bit too big, but they'd look so good styled low-slung with crisp white sneakers for that effortless 90s vibe.
 ```
 
 ---
@@ -147,15 +166,15 @@ $ python -c "from tools import create_fit_card; ..."
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked Claude whether `search_listings` was efficient in memory and runtime.
+- *What came back:* It found that `_size_matches` re-tokenized the fixed `size` argument on every listing instead of once.
+- *What I changed:* I hoisted `size_tokens = _tokenize(size)` out of the loop, computed once instead of per-listing.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked Claude whether the `suggest_outfit` prompt wording could be improved further.
+- *What came back:* It found no better wording, but caught a bug: each wardrobe item's `colors` is a list, and my summary line put it straight into the f-string, so the prompt would have shown `['black']` instead of `black`.
+- *What I changed:* I joined the list with `', '.join(...)` before interpolating, matching how the new item's colors were already formatted in the same function.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
