@@ -52,8 +52,6 @@ passing by coincidence. 5 of 5 because passing a value from
 `session["selected_item"]` into a tool call is deterministic plumbing, not 
 model generation — any miss is a real bug, not noise.
 
-
-
 ---
 
 ## 4. Something about the fit card
@@ -67,8 +65,6 @@ or describe the price in words instead. 4 of 5 catches a card that routinely
 drops the price while leaving room for the same kind of occasional miss 
 criterion 1 already tolerates.
 
-
-
 ---
 
 ## 5. Your choice
@@ -81,8 +77,6 @@ the exception crash the run — in 5 of 5 tries.
 model generation — the same bad key should fail the same safe way every time. 
 5 of 5 because any crash reaching the user here is a real bug, not variance to
 tolerate.
-
-
 
 ---
 
