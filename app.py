@@ -104,6 +104,11 @@ def cmd_examples(args):
     )
 
 
+def _indent_block(text, width=12):
+    """Indent every line after the first so multi-line text lines up under its label."""
+    return str(text).replace("\n", "\n" + " " * width)
+
+
 def _ask_one(query, wardrobe, use_trace):
     from agent import run_agent
     import trace as trace_module
@@ -120,9 +125,9 @@ def _ask_one(query, wardrobe, use_trace):
         item = session["selected_item"] or {}
         print(f"  Found:    {item.get('title')} — ${item.get('price')} on {item.get('platform')}")
         print()
-        print(f"  Outfit:   {session['outfit_suggestion']}")
+        print(f"  Outfit:   {_indent_block(session['outfit_suggestion'])}")
         print()
-        print(f"  Fit card: {session['fit_card']}")
+        print(f"  Fit card: {_indent_block(session['fit_card'])}")
     print()
 
     if use_trace:
