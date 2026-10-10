@@ -126,6 +126,12 @@ def _ask_one(query, wardrobe, use_trace):
         print(f"  Found:    {item.get('title')} — ${item.get('price')} on {item.get('platform')}")
         print()
         print(f"  Outfit:   {_indent_block(session['outfit_suggestion'])}")
+        if not wardrobe.get("items"):
+            print()
+            print(
+                "            Note: your wardrobe is empty, so this outfit is general ideas\n"
+                "            built around the listing, not pieces you own."
+            )
         print()
         print(f"  Fit card: {_indent_block(session['fit_card'])}")
     print()

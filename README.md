@@ -258,19 +258,53 @@ that produced it:
 **Happy path**
 
 ```
+$ python app.py ask 'vintage graphic tee under $30'
 
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+[3] select_item
+      in:  first search result
+      out: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+[4] suggest_outfit
+      in:  dict with keys: item, wardrobe_items
+      out: **Outfit Combination:** Pair the Y2K butterfly baby tee with the baggy straight-leg dark wash jeans, chunky wh…
+[5] create_fit_card
+      in:  Y2K Baby Tee — Butterfly Print
+      out: Found the absolute cutest Y2K butterfly baby tee on depop for just $18 and I am never taking it off. I've been…
 ```
 
 **Empty search**
 
 ```
+$ python app.py ask 'designer ballgown size XXS under $5'
 
+[1] parse_query
+      in:  designer ballgown size XXS under $5
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: [] (empty)
+[3] branch: no results
+      →    stopping before suggest_outfit
 ```
 
-**On the MCP move:** <!-- what changed in your code, and whether anything
-behaved differently afterwards. If the rewire didn't work, say exactly where it
-broke — the error text and the last thing that worked. That earns the point in
-full. -->
+The empty trace is three steps against five, and it ends at the branch, so
+`suggest_outfit` and `create_fit_card` never run.
+
+**On the MCP move:** `search_listings` is now registered on the MCP server
+(`mcp_server.py`) with typed inputs and a description. `run_agent` calls it
+through `call_tool` (`mcp_client.py`), which starts the server over stdio for
+each call, instead of importing it from `tools.py`. The other two tools are
+still direct calls. Step 2 in both traces is the MCP call.
+
+Nothing behaved differently. For `vintage graphic tee`, max $30, the direct call
+and the MCP call returned identical lists (10 results each), and the empty query
+still comes back as `[]`, so the branch works as before. The 10-result cap lives
+in the tool itself, not in MCP.
 
 
 
