@@ -87,11 +87,10 @@ def search_listings(
             Omit to skip price filtering.
 
     Returns:
-        A list of listing objects, each with id, title, description, category,
-        style_tags (list of strings), size, condition, price (number, USD),
-        colors (list of strings), brand (string or null — often null) and
-        platform. When nothing matches, returns an empty list; it does not
-        raise an error.
+        A list of up to 10 listing objects, best match first, each with
+        fields such as title, price (number, USD), size, platform and brand
+        (often null). When nothing matches, returns an empty list; it does
+        not raise an error.
     """
     return _search_listings_impl(description, size, max_price)
 
