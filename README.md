@@ -196,17 +196,133 @@ Found my holy grail vintage Levi's 501s and I'm obsessed with this medium wash. 
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. A matching query completes all three tools | ≥ 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. An impossible query stops before the second tool | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. State: the item searched is the item passed to `suggest_outfit` (Try N = item N) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card names the item's exact price (Try N = item N) | ≥ 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Invalid API key is caught as `ModelUnavailable` | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
-**Real output from one try**, pasted as text, naming the file and function
-that produced it:
+Rows 3 and 4: Try N is item N's Try 1 (Y2K Baby Tee, 90s Track Jacket, 90s
+Silk Slip Dress, Platform Sneakers, Denim Jacket). I chose Try 1 before
+reading any results.
+
+**Criterion 1, Try 1**, from `run_eval.py::main` calling `agent.py::run_agent`, `scenarios.py` scenario "matching query completes" (`results/run_2026-10-09_2302_before.md` lines 42-80):
 
 ```
+- stopped early: no
+- selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+- search_results: 10
 
+Outfit suggestion:
+
+**Outfit Combination: Y2K Casual Streetwear**
+
+Pair the Y2K butterfly baby tee with the baggy dark-wash straight-leg jeans and chunky white sneakers, then layer the black cropped zip hoodie on top. This combination works because the slim fit of the baby tee contrasts perfectly with the voluminous, relaxed silhouette of the baggy jeans, while the black hoodie frames the pastel butterfly print and ties the look together with classic Y2K street style.
+
+Fit card:
+
+Still pinching myself over this $18 Y2K butterfly baby tee I just scored on depop. I'm obsessed with how the pastel print pops when you throw a cropped black zip hoodie over it. Paired with some baggy dark-wash jeans and chunky sneakers, it is literally the ultimate off-duty Y2K streetwear fit.
+
+Trace:
+
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+[3] select_item
+      in:  first search result
+      out: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+[4] suggest_outfit
+      in:  dict with keys: item, wardrobe_items
+      out: **Outfit Combination: Y2K Casual Streetwear**  Pair the Y2K butterfly baby tee with the baggy dark-wash straig…
+[5] create_fit_card
+      in:  Y2K Baby Tee — Butterfly Print
+      out: Still pinching myself over this $18 Y2K butterfly baby tee I just scored on depop. I'm obsessed with how the p…
+```
+
+**Criterion 2, Try 1**, from `run_eval.py::main` calling `agent.py::run_agent`, `scenarios.py` scenario "impossible query stops early" (`results/run_2026-10-09_2302_before.md` lines 256-273):
+
+```
+- stopped early: yes — Nothing matched "designer ballgown". Try broader keywords first (e.g. "jacket" instead of a specific style). Your $5 budget and size xxs may also be ruling things out, so loosen one at a time to see which.
+- selected_item: (none)
+- search_results: 0
+
+Trace:
+
+[1] parse_query
+      in:  designer ballgown size XXS under $5
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: [] (empty)
+[3] branch: no results
+      →    stopping before suggest_outfit
+```
+
+**Criterion 3, Try 1 (item 1)**, from `run_eval.py::main` calling `agent.py::run_agent`, `scenarios.py` scenario "item 1: Y2K Baby Tee" (`results/run_2026-10-09_2302_before.md` lines 565-605):
+
+```
+- stopped early: no
+- selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+- search_results: 10
+
+Outfit suggestion:
+
+**Outfit 1: Casual Y2K Streetwear**
+Pair the Y2K Butterfly Baby Tee with the baggy straight-leg jeans, vintage black denim jacket, and chunky white sneakers. This combination works because the slim fit of the baby tee contrasts perfectly with the voluminous, relaxed denim for an authentic turn-of-the-millennium silhouette. Layer the black denim jacket loosely over the shoulders and let the bright butterfly print pop against the dark wash.
+
+**Outfit 2: Edgy Contrast**
+Style the Y2K Butterfly Baby Tee alongside the wide-leg khaki trousers, black combat boots, and the black crossbody bag. This works by blending the hyper-feminine, playful energy of the butterfly print with the utilitarian, rugged edge of the khaki trousers and combat boots. Cinch the trousers with a cool belt and accessorize with the crossbody bag to tie the effortless, grunge-leaning look together.
+
+Trace:
+
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+[3] select_item
+      in:  first search result
+      out: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+[4] suggest_outfit
+      in:  dict with keys: item, wardrobe_items
+      out: **Outfit 1: Casual Y2K Streetwear** Pair the Y2K Butterfly Baby Tee with the baggy straight-leg jeans, vintage…
+[5] create_fit_card
+      in:  Y2K Baby Tee — Butterfly Print
+      out: Obsessed with this Y2K butterfly baby tee I just scored for only $18. I'm thinking it'll look so good either d…
+```
+
+**Criterion 4, Try 1 (item 1)**, from `agent.py::run_agent` calling `create_fit_card`, `scenarios.py` scenario "item 1: Y2K Baby Tee" (`results/run_2026-10-09_2302_before.md` lines 581-585, same try as criterion 3):
+
+```
+Fit card:
+
+Obsessed with this Y2K butterfly baby tee I just scored for only $18. I'm thinking it'll look so good either dressed down with baggy denim and sneakers for that ultimate Y2K streetwear vibe, or toughened up with combat boots and khakis for a cool grunge contrast. Going to list it on my Depop later today so grab it before I change my mind!
+```
+
+**Criterion 5, Try 1**, from `run_eval.py::main` calling `agent.py::run_agent`, `scenarios.py` scenario "invalid API key is caught" (`results/run_2026-10-09_2302_before.md` lines 1638-1658):
+
+```
+- stopped early: yes — The model rejected your API key. Check GEMINI_API_KEY in your .env file, or create a fresh key at aistudio.google.com.
+- selected_item: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+- search_results: 10
+
+Trace:
+
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+[3] select_item
+      in:  first search result
+      out: Y2K Baby Tee — Butterfly Print ($18.0, depop)
+[4] branch: ModelUnavailable
+      →    stopping, error set on session
 ```
 
 ---
