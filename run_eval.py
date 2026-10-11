@@ -51,11 +51,27 @@ def run_once(scenario, use_trace=True):
         trace_module.start_trace()
 
     record = {"error": None, "session": None, "trace": "", "crashed": None}
+
+    # A scenario can ask for an invalid key. Swap it in for this try only, and
+    # drop the cached client so the bad key is really used.
+    import os
+    import generate
+    real_key = os.environ.get("GEMINI_API_KEY")
+    if scenario.get("bad_key"):
+        os.environ["GEMINI_API_KEY"] = "invalid-key-for-testing"
+        generate._client = None
     try:
         record["session"] = run_agent(scenario["query"], wardrobe)
     except Exception as exc:  # noqa: BLE001 — a crash is a result worth logging
         record["crashed"] = f"{type(exc).__name__}: {exc}"
         record["traceback"] = traceback.format_exc()
+    finally:
+        if scenario.get("bad_key"):
+            if real_key is None:
+                os.environ.pop("GEMINI_API_KEY", None)
+            else:
+                os.environ["GEMINI_API_KEY"] = real_key
+            generate._client = None
 
     if use_trace:
         record["trace"] = trace_module.get_trace()
