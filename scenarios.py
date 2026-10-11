@@ -35,18 +35,49 @@ SCENARIOS = [
         "wardrobe": "empty",
         "criterion": None,
     },
-    # TODO: add what your criteria 3, 4 and 5 need.
-    #
-    # Set "criterion" to the number in criteria.md that the scenario tests.
-    # "criterion": None means a diagnostic run — useful to have, but it isn't
-    # one of your five, and run_eval.py marks it as such in the table.
-    #
-    # For a state criterion, any normal query works — what you're checking is
-    # what ends up in the session, not what the user typed.
-    #
-    # For a fit-card criterion, you probably want the SAME query listed more
-    # than once, or several different items, depending on what your criterion
-    # actually says.
+    {
+        # A query whose top result is the Y2K Baby Tee. Criteria 3 and 4 — item 1 of 5.
+        "name": "item 1: Y2K Baby Tee",
+        "query": "vintage graphic tee under $30",
+        "wardrobe": "example",
+        "criterion": 3,
+    },
+    {
+        # A query whose top result is the 90s Track Jacket. Criteria 3 and 4 — item 2 of 5.
+        "name": "item 2: 90s Track Jacket",
+        "query": "90s track jacket in size M",
+        "wardrobe": "example",
+        "criterion": 3,
+    },
+    {
+        # A query whose top result is the 90s Silk Slip Dress. Criteria 3 and 4 — item 3 of 5.
+        "name": "item 3: 90s Silk Slip Dress",
+        "query": "silk slip dress in midi length under $40",
+        "wardrobe": "example",
+        "criterion": 3,
+    },
+    {
+        # A query whose top result is the Platform Sneakers. Criteria 3 and 4 — item 4 of 5.
+        "name": "item 4: Platform Sneakers",
+        "query": "platform sneakers size 8",
+        "wardrobe": "example",
+        "criterion": 3,
+    },
+    {
+        # A query whose top result is the Denim Jacket. Criteria 3 and 4 — item 5 of 5.
+        "name": "item 5: Denim Jacket",
+        "query": "denim jacket under $50",
+        "wardrobe": "example",
+        "criterion": 3,
+    },
+    {
+        # A matching query with an invalid key swapped in. Criterion 5.
+        "name": "invalid API key is caught",
+        "query": "vintage graphic tee under $30",
+        "wardrobe": "example",
+        "bad_key": True,
+        "criterion": 5,
+    },
 ]
 
 WARDROBES = ("example", "empty")
