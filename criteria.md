@@ -65,6 +65,15 @@ or describe the price in words instead. 4 of 5 catches a card that routinely
 drops the price while leaving room for the same kind of occasional miss 
 criterion 1 already tolerates.
 
+> **Revised in unit 4:** For at least 5 different items, the fit card
+> contains the item's price in digits as `$<price>` (`$18` or `$18.00`), with no
+> other dollar figure on the card — in 5 of 5 tries.
+>
+> **Why revised:** The original was measurable and I met it 5/5, so it wasn't
+> broken, just too loose for a model-dependent check, and "exact price" didn't
+> say whether "$18" counts for an $18.0 listing. Before is scored against the
+> original target, After against this one.
+
 ---
 
 ## 5. Your choice
