@@ -347,15 +347,28 @@ Trace:
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | A matching query completes all three tools | ≥ 4 of 5 | MET (5/5) | All five tries ended with `stopped early: no`, an outfit and a fit card. |
+| 2 | An impossible query stops before the second tool | 5 of 5 | MET (5/5) | All five tries ended at `branch: no results` with 0 results and no outfit or fit card. |
+| 3 | The item searched is the item passed to `suggest_outfit` | 5 of 5 | MET (5/5) | For each of the five items, the selected item was the one in the `suggest_outfit` and `create_fit_card` steps. |
+| 4 | Fit card names the item's exact price | ≥ 4 of 5 | MET (5/5) | Each card contained the item's price (e.g. "$18" for an $18.0 listing). |
+| 5 | Invalid API key is caught as `ModelUnavailable` | 5 of 5 | MET (5/5) | All five tries stopped at `branch: ModelUnavailable` with the readable key message, no crash. |
 
 **Diagnoses**
 
+No criterion missed, so there is nothing to place in a tool, the loop's branch,
+the session, or the model's output, and no pattern across rows.
 
+**Were my targets too low?** Yes, for criterion 4. It is the only criterion
+that depends on the model's wording, and a target of 4 of 5 left room for a
+miss that never came. I'd tighten it to 5 of 5, with the card required to show
+the price as `$<price>` and no other dollar figure (added to `criteria.md`).
+Criteria 2, 3 and 5 test fixed code paths, so 5 of 5 was right. Criterion 1
+allowed one miss and had none.
+
+I re-scored all 25 Before cards (5 items × 5 tries) against the tightened
+criterion 4, and all passed, so it wouldn't have changed this run. Limits:
+every listing in `data/listings.json` has a whole-dollar price, so cents
+formatting is untested, and five items is a small sample.
 
 ---
 
