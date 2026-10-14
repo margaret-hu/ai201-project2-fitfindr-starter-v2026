@@ -181,7 +181,7 @@ def run_agent(query: str, wardrobe: dict) -> dict:
                        returned=session["fit_card"])
         except (ModelUnavailable, MCPError) as exc:
             session["error"] = str(exc)
-            trace.step("branch: ModelUnavailable", note="stopping, error set on session")
+            trace.step(f"branch: {type(exc).__name__}", note="stopping, error set on session")
         return session
 
 

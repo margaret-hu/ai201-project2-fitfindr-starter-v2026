@@ -102,7 +102,7 @@ FitFindr is a second-hand shopping assistant. A user describes what they want, s
 
 **How the query is parsed:** Regex, in `agent.py::_parse_query`. It pulls the price ("under $30") and size ("size M") out of the query, and what's left becomes the description.
 
-**What moves through the session:** `query` → `parsed` (description, size, max_price) → `search_results` → `selected_item` → `outfit_suggestion` → `fit_card`. `wardrobe` is set at the start, and `error` is set only when the search is empty.
+**What moves through the session:** `query` → `parsed` (description, size, max_price) → `search_results` → `selected_item` → `outfit_suggestion` → `fit_card`. `wardrobe` is set at the start, and `error` is set when the search is empty or a model or MCP call fails.
 
 ---
 
@@ -438,7 +438,8 @@ empty query still comes back as `[]`, so the branch works as before. The
 10-result cap lives in the tool itself, not in MCP. For `create_fit_card`, an
 empty or whitespace `outfit` still returns the fallback message. One
 difference: a model failure inside the server reaches the agent as `MCPError`,
-not `ModelUnavailable`, so `run_agent` catches both and sets `session["error"]`.
+not `ModelUnavailable`, so `run_agent` catches both, sets `session["error"]` and
+labels the trace step with whichever it caught.
 
 
 
