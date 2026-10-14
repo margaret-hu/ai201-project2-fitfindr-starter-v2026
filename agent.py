@@ -17,8 +17,8 @@ import re
 
 import config
 import trace
-from mcp_client import call_tool
-from tools import suggest_outfit, create_fit_card
+from mcp_client import call_tool, MCPError
+from tools import suggest_outfit
 from generate import ModelUnavailable
 
 
@@ -172,13 +172,14 @@ def run_agent(query: str, wardrobe: dict) -> dict:
                                "wardrobe_items": len(session["wardrobe"].get("items", []))},
                        returned=session["outfit_suggestion"])
 
-            session["fit_card"] = create_fit_card(
-                session["outfit_suggestion"], session["selected_item"]
-            )
-            trace.step("create_fit_card",
+            session["fit_card"] = call_tool("create_fit_card", {
+                "outfit": session["outfit_suggestion"],
+                "new_item": session["selected_item"],
+            })
+            trace.step("create_fit_card (via MCP)",
                        inputs=session["selected_item"].get("title"),
                        returned=session["fit_card"])
-        except ModelUnavailable as exc:
+        except (ModelUnavailable, MCPError) as exc:
             session["error"] = str(exc)
             trace.step("branch: ModelUnavailable", note="stopping, error set on session")
         return session

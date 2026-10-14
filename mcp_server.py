@@ -60,6 +60,7 @@ works with a direct call, and **a documented failure earns the point in full.**
 from mcp.server.fastmcp import FastMCP
 
 from tools import search_listings as _search_listings_impl
+from tools import create_fit_card as _create_fit_card_impl
 # log_level="WARNING" keeps the server from printing an INFO line for every
 # request. Without it your terminal fills with "Processing request of type
 # CallToolRequest" and the output you actually care about scrolls away.
@@ -93,6 +94,26 @@ def search_listings(
         not raise an error.
     """
     return _search_listings_impl(description, size, max_price)
+
+
+@mcp.tool()
+def create_fit_card(outfit: str, new_item: dict) -> str:
+    """
+    Write a short social-media caption (2-4 sentences) for a thrifted find.
+
+    Args:
+        outfit: the outfit suggestion text describing how the item would be
+            worn. Required. If empty or whitespace, the tool returns a
+            message saying there is no outfit yet instead of raising.
+        new_item: the listing object for the item, as returned by
+            search_listings. Uses its title, price (a number in whole US
+            dollars, not cents) and platform.
+
+    Returns:
+        Plain-text caption that mentions the item, price and platform once
+        each. The wording differs between calls.
+    """
+    return _create_fit_card_impl(outfit, new_item)
 
 
 # Two notes on the block above.

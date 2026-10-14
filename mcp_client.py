@@ -72,9 +72,15 @@ async def _call(name: str, arguments: dict):
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
+    import config
+
+    # The server is a separate process, so it reads its own config. Pass the
+    # cache setting along, or run_eval.py turning the cache off wouldn't reach
+    # the model calls that now happen inside the server.
     params = StdioServerParameters(
         command=sys.executable,
         args=[str(SERVER)],
+        env={"AI201_CACHE": "1" if config.CACHE_ENABLED else "0"},
     )
 
     async with stdio_client(params) as (read, write):
