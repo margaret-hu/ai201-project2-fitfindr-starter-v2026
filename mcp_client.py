@@ -33,6 +33,10 @@ from pathlib import Path
 
 SERVER = Path(__file__).parent / "mcp_server.py"
 
+# Extra environment variables for the server process. run_eval.py uses this to
+# give the server a bad API key without breaking the agent's own model calls.
+EXTRA_ENV: dict[str, str] = {}
+
 
 class MCPError(RuntimeError):
     """The server couldn't be reached, or it refused the call."""
@@ -60,12 +64,39 @@ def call_tool(name: str, arguments: dict):
     except MCPError:
         raise
     except Exception as exc:  # noqa: BLE001 — re-raised readably below
+        # The server ran and reported the failure itself (e.g. a bad API key
+        # inside a tool). The anyio task group wraps that in an exception
+        # group, so unwrap it. The "does the server run?" hint doesn't apply.
+        reported = [e for e in _leaves(exc) if isinstance(e, MCPError)]
+        if reported:
+            raise reported[0] from exc
         raise MCPError(
-            f"Couldn't call '{name}' over MCP: {exc}\n"
+            f"Couldn't call '{name}' over MCP: {_root_cause(exc)}\n"
             f"Check that mcp_server.py runs on its own first:\n"
             f"    python mcp_server.py\n"
             f"If it exits immediately with an error, fix that before coming back here."
         ) from exc
+
+
+def _leaves(exc: BaseException) -> list[BaseException]:
+    children = getattr(exc, "exceptions", None)
+    if children:
+        return [leaf for child in children for leaf in _leaves(child)]
+    return [exc]
+
+
+def _root_cause(exc: BaseException) -> str:
+    """
+    Dig the real error out of an exception group.
+
+    The MCP client runs inside an anyio task group, so any failure surfaces as
+    "unhandled errors in a TaskGroup (1 sub-exception)", which says nothing
+    about what went wrong. Walk down to the leaf exceptions and report those.
+    """
+    children = getattr(exc, "exceptions", None)
+    if children:
+        return "; ".join(_root_cause(child) for child in children)
+    return f"{type(exc).__name__}: {exc}"
 
 
 async def _call(name: str, arguments: dict):
@@ -80,7 +111,7 @@ async def _call(name: str, arguments: dict):
     params = StdioServerParameters(
         command=sys.executable,
         args=[str(SERVER)],
-        env={"AI201_CACHE": "1" if config.CACHE_ENABLED else "0"},
+        env={"AI201_CACHE": "1" if config.CACHE_ENABLED else "0", **EXTRA_ENV},
     )
 
     async with stdio_client(params) as (read, write):

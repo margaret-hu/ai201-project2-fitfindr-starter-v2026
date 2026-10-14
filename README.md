@@ -441,8 +441,6 @@ difference: a model failure inside the server reaches the agent as `MCPError`,
 not `ModelUnavailable`, so `run_agent` catches both, sets `session["error"]` and
 labels the trace step with whichever it caught.
 
-
-
 ---
 
 ## The Improvement
@@ -474,7 +472,26 @@ Evidence, from `results/run_2026-10-13_0145_after.md`:
 
 **Did it help, and how do I know:** No, and it couldn't have, since the agent didn't change. The tighter criterion 4 passed 25 of 25, so the Before result wasn't a loose-target fluke. I counted dollar figures per card with a regex. Limits: whole-dollar prices only, five items, temperature 0.9.
 
+### The Second Improvement
 
+**What I changed:** A bad key inside the MCP `create_fit_card` server came back as `MCPError: unhandled errors in a TaskGroup`, plus a hint to check that the server runs. The message never named the key. `mcp_client.py::call_tool` now unwraps the exception group and raises the server's own error. I added a scenario with a good key for `suggest_outfit` and a bad one in the server, and extended criterion 5 to both paths, 5 of 5 each (see `criteria.md`).
+
+**Which failure it was meant to fix:** The "Model failure over MCP" gap in What's Still Broken, which I reproduced by hand first.
+
+### Run Log — After (second change)
+
+| Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
+|---|---|---|---|---|---|---|---|
+| 1. A matching query completes all three tools | ≥ 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. An impossible query stops before the second tool | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. The item searched is the item passed to `suggest_outfit` | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card shows `$<price>` and no other dollar figure | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5a. Bad key in `suggest_outfit` is caught, cause named | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5b. Bad key inside the MCP server is caught, cause named (new) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+
+Evidence, from `results/run_2026-10-13_2048_after2.md`: all ten criterion 5 tries set `session["error"]` to a message containing "The model rejected your API key", and none contained "TaskGroup". The 5b tries stopped at `branch: MCPError` after `suggest_outfit` succeeded, with no fit card. The other rows are scored the same way as the first After log.
+
+**Did it help, and how do I know:** It fixed the message and broke nothing: criteria 1 to 5a match the previous log, and 5b passes 5 of 5. 5b wasn't in the previous log, so it has no before-row. Its before-evidence is one manual run showing "unhandled errors in a TaskGroup". Limits: one failure type (a bad key), five tries, and criterion 3 is scored by matching the item title across trace steps.
 
 ---
 
@@ -489,7 +506,7 @@ No criterion is missed, but the criteria leave four gaps:
 - **Keyword search:** `search_listings` matches shared words, not meaning, and I only tested queries that share words with a listing. I'd try paraphrases ("retro band shirt") and add synonyms if they fail. Stopped: no run showed a miss.
 - **Price with cents:** All listings are whole-dollar, so $24.50 is untested. I'd add such a listing and re-check. Stopped: the current data can't trigger it.
 - **Invented details in fit cards:** Some claim things not in the input, e.g. "Going to list it on my Depop later today" (Before, item 1). I'd tell the prompt not to invent actions and add a criterion for it. Stopped: I found it after the criteria were written.
-- **Model failure over MCP:** Criterion 5 never reaches the MCP fit-card call, so a failure inside the server (now `MCPError`) was only checked by hand, and its message hides the real cause. I'd surface the underlying error and add a criterion. Stopped: I moved `create_fit_card` to MCP after the criteria and both runs.
+- **Model failure over MCP:** Fixed in the second pass (see The Improvement). Remaining gap: only a bad key was tested inside the server, not other model failures (rate limit, timeout), and `MCPError` still carries the server's "Error executing tool ..." prefix. Stopped: no run showed a miss.
 
 <!-- ═════════════════════════════════════════════════════════════════════
 

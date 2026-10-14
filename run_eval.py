@@ -60,12 +60,16 @@ def run_once(scenario, use_trace=True):
     if scenario.get("bad_key"):
         os.environ["GEMINI_API_KEY"] = "invalid-key-for-testing"
         generate._client = None
+    import mcp_client
+    if scenario.get("bad_server_key"):
+        mcp_client.EXTRA_ENV["GEMINI_API_KEY"] = "invalid-key-for-testing"
     try:
         record["session"] = run_agent(scenario["query"], wardrobe)
     except Exception as exc:  # noqa: BLE001 — a crash is a result worth logging
         record["crashed"] = f"{type(exc).__name__}: {exc}"
         record["traceback"] = traceback.format_exc()
     finally:
+        mcp_client.EXTRA_ENV.pop("GEMINI_API_KEY", None)
         if scenario.get("bad_key"):
             if real_key is None:
                 os.environ.pop("GEMINI_API_KEY", None)

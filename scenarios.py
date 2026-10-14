@@ -78,6 +78,15 @@ SCENARIOS = [
         "bad_key": True,
         "criterion": 5,
     },
+    {
+        # A good key for suggest_outfit, a bad one inside the MCP server, so the
+        # failure happens in create_fit_card. Criterion 5, second path.
+        "name": "invalid API key inside MCP server is caught",
+        "query": "vintage graphic tee under $30",
+        "wardrobe": "example",
+        "bad_server_key": True,
+        "criterion": 5,
+    },
 ]
 
 WARDROBES = ("example", "empty")

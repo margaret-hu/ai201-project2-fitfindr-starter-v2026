@@ -87,6 +87,15 @@ model generation — the same bad key should fail the same safe way every time.
 5 of 5 because any crash reaching the user here is a real bug, not variance to
 tolerate.
 
+> **Revised in unit 4:** Given an invalid API key, the agent sets
+> `session["error"]` to a message naming the rejected key and does not crash,
+> whether the model call fails in `suggest_outfit` or inside the MCP
+> `create_fit_card` server — 5 of 5 tries on each path.
+>
+> **Why revised:** The original only reached the `suggest_outfit` path. A bad
+> key inside the server surfaced as "unhandled errors in a TaskGroup", which
+> hid the cause. The revision covers both paths and requires the cause to show.
+
 ---
 
 <!-- ─────────────────────────────────────────────────────────────────────────
