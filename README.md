@@ -478,7 +478,11 @@ Evidence, from `results/run_2026-10-13_0145_after.md`:
      you did. "I ran out of time" is fine if it's true. Pretending nothing is
      left is not. -->
 
+No criterion is missed, but the criteria leave three gaps:
 
+- **Keyword search:** `search_listings` matches shared words, not meaning, and I only tested queries that share words with a listing. I'd try paraphrases ("retro band shirt") and add synonyms if they fail. Stopped: no run showed a miss.
+- **Price with cents:** All listings are whole-dollar, so $24.50 is untested. I'd add such a listing and re-check. Stopped: the current data can't trigger it.
+- **Invented details in fit cards:** Some claim things not in the input, e.g. "Going to list it on my Depop later today" (Before, item 1). I'd tell the prompt not to invent actions and add a criterion for it. Stopped: I found it after the criteria were written.
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
