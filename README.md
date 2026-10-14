@@ -79,6 +79,7 @@ FitFindr is a second-hand shopping assistant. A user describes what they want, s
 - **Inputs:** `outfit` (str), `new_item` (dict) a listing.
 - **Returns:** A str of two to four sentences that includes the price written with digits and the selling platform.
 - **When it has nothing:** If `outfit` is empty or whitespace, returns a helpful fallback message instead of calling the model or raising an exception.
+- **Served over MCP:** Registered on the MCP server in `mcp_server.py`, alongside `search_listings`, and called from `agent.py::run_agent` through `call_tool`.
 
 ---
 
@@ -401,7 +402,7 @@ $ python app.py ask 'vintage graphic tee under $30'
 [4] suggest_outfit
       in:  dict with keys: item, wardrobe_items
       out: **Outfit Combination:** Pair the Y2K butterfly baby tee with the baggy straight-leg dark wash jeans, chunky wh…
-[5] create_fit_card
+[5] create_fit_card (via MCP)
       in:  Y2K Baby Tee — Butterfly Print
       out: Found the absolute cutest Y2K butterfly baby tee on depop for just $18 and I am never taking it off. I've been…
 ```
@@ -424,16 +425,20 @@ $ python app.py ask 'designer ballgown size XXS under $5'
 The empty trace is three steps against five, and it ends at the branch, so
 `suggest_outfit` and `create_fit_card` never run.
 
-**On the MCP move:** `search_listings` is now registered on the MCP server
-(`mcp_server.py`) with typed inputs and a description. `run_agent` calls it
-through `call_tool` (`mcp_client.py`), which starts the server over stdio for
-each call, instead of importing it from `tools.py`. The other two tools are
-still direct calls. Step 2 in both traces is the MCP call.
+**On the MCP move:** `search_listings` and `create_fit_card` are registered on
+the MCP server (`mcp_server.py`) with typed inputs and descriptions. `run_agent`
+calls them through `call_tool` (`mcp_client.py`), which starts the server over
+stdio for each call, instead of importing them from `tools.py`. Only
+`suggest_outfit` is still a direct call. Step 2 in both traces and step 5 in the
+happy path are MCP calls.
 
-Nothing behaved differently. For `vintage graphic tee`, max $30, the direct call
-and the MCP call returned identical lists (10 results each), and the empty query
-still comes back as `[]`, so the branch works as before. The 10-result cap lives
-in the tool itself, not in MCP.
+Behavior is unchanged for `search_listings`: for `vintage graphic tee`, max $30,
+the direct and MCP calls returned identical lists (10 results each), and the
+empty query still comes back as `[]`, so the branch works as before. The
+10-result cap lives in the tool itself, not in MCP. For `create_fit_card`, an
+empty or whitespace `outfit` still returns the fallback message. One
+difference: a model failure inside the server reaches the agent as `MCPError`,
+not `ModelUnavailable`, so `run_agent` catches both and sets `session["error"]`.
 
 
 
@@ -478,11 +483,12 @@ Evidence, from `results/run_2026-10-13_0145_after.md`:
      you did. "I ran out of time" is fine if it's true. Pretending nothing is
      left is not. -->
 
-No criterion is missed, but the criteria leave three gaps:
+No criterion is missed, but the criteria leave four gaps:
 
 - **Keyword search:** `search_listings` matches shared words, not meaning, and I only tested queries that share words with a listing. I'd try paraphrases ("retro band shirt") and add synonyms if they fail. Stopped: no run showed a miss.
 - **Price with cents:** All listings are whole-dollar, so $24.50 is untested. I'd add such a listing and re-check. Stopped: the current data can't trigger it.
 - **Invented details in fit cards:** Some claim things not in the input, e.g. "Going to list it on my Depop later today" (Before, item 1). I'd tell the prompt not to invent actions and add a criterion for it. Stopped: I found it after the criteria were written.
+- **Model failure over MCP:** Criterion 5 never reaches the MCP fit-card call, so a failure inside the server (now `MCPError`) was only checked by hand, and its message hides the real cause. I'd surface the underlying error and add a criterion. Stopped: I moved `create_fit_card` to MCP after the criteria and both runs.
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
