@@ -446,24 +446,27 @@ in the tool itself, not in MCP.
 
      `python run_eval.py --label after` -->
 
-**What I changed:**
+**What I changed:** No code change, since every criterion was already MET in Before. I tightened criterion 4 to require `$<price>` and no other dollar figure, 5 of 5 (see `criteria.md`), and re-ran the eval unchanged.
 
-**Which failure it was meant to fix:**
+**Which failure it was meant to fix:** None. My diagnosis found no miss, only that criterion 4 (≥ 4 of 5) was too loose for the one model-dependent check, so a miss could have slipped through. The tighter version can fail where the old one couldn't.
 
 ### Run Log — After
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. A matching query completes all three tools | ≥ 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. An impossible query stops before the second tool | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. The item searched is the item passed to `suggest_outfit` | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card shows `$<price>` and no other dollar figure (tightened) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Invalid API key is caught as `ModelUnavailable` | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
-**Did it help, and how do I know:**
+Evidence, from `results/run_2026-10-13_0145_after.md`:
 
-<!-- If it made things worse, say that. Honestly reported, that earns full
-     credit and is more interesting than one that worked. -->
+- Criteria 3 and 4 use five items, five tries each: Y2K Baby Tee ($18), 90s Track Jacket ($45), 90s Silk Slip Dress ($30), Platform Sneakers ($48), Denim Jacket ($42). In all 25 fit cards the only dollar figure was the item's own price (`$18`, `$45`, `$30`, `$48`, `$42`), with no second figure. In every try the item named in the `search_listings` step was the one in `suggest_outfit`.
+- Criterion 2: every try ended at `branch: no results` after three steps, with no outfit or fit card.
+- Criterion 5: every try ended at `branch: ModelUnavailable` after four steps, with the readable key message.
+
+**Did it help, and how do I know:** No, and it couldn't have, since the agent didn't change. The tighter criterion 4 passed 25 of 25, so the Before result wasn't a loose-target fluke. I counted dollar figures per card with a regex. Limits: whole-dollar prices only, five items, temperature 0.9.
 
 
 
